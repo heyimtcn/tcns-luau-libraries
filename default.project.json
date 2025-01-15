@@ -1,0 +1,9 @@
+{
+  "name": "tcn-libraries",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$path": "libs"
+    }
+  }
+}
