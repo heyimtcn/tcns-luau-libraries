@@ -43,6 +43,16 @@ function Table.gettype(tbl:{[any]:any?}):"empty"|"array"|"dict"|"mixed"
 	end
 end
 
+function Table.setnget<T,U>(tbl:{T:U},key:T,val:U):U
+	tbl[key] = val
+	return val
+end
+
+function Table.insertnget<T>(arr:{T},val:T):T
+	Table.insert(arr,val)
+	return val
+end
+
 function Table.repeattimes<T>(arr:{T},count:number,same_arr:boolean?):{T}
 	local new_arr = if same_arr then arr else Table.clone(arr)
 	local current_values = Table.clone(new_arr)
@@ -544,10 +554,12 @@ function Table.min(tbl:{number}):number
 	return math.min(Table.unpack(tbl))
 end
 
-type Destroyable = {Destroy:(self:Destroyable) -> ()}
-type Disconnectable = {Disconnect:(self:Disconnectable) -> ()}
+export type Destroyable = {Destroy:(self:Destroyable) -> ()}
+export type Disconnectable = {Disconnect:(self:Disconnectable) -> ()}
+export type CleanupContainer = {Cleanup:(self:CleanupContainer) -> (),Destroy:(self:CleanupContainer) -> (),Add:<T>(self:CleanupContainer,val:T) -> T,[number]:CleanupType}
+export type CleanupType = Instance|RBXScriptConnection|thread|() -> ()|Destroyable|Disconnectable|CleanupContainer
 
-function Table.cleanup(arr:{Instance|RBXScriptConnection|thread|() -> ()|Destroyable|Disconnectable})
+function Table.cleanup(arr:{CleanupType})
 	for _, val in ipairs(arr) do
 		local typ = typeof(val)
 		if typ == "Instance" then
@@ -573,6 +585,25 @@ function Table.cleanup(arr:{Instance|RBXScriptConnection|thread|() -> ()|Destroy
 			end
 		end
 	end
+	Table.clear(arr)
+end
+
+function Table.cleanupcontainer(parent:CleanupContainer?):CleanupContainer
+	local mmidx = {}
+	local tbl = setmetatable({},{__index = mmidx})
+	function mmidx:Cleanup()
+		Table.cleanup(tbl)
+	end
+	function mmidx:Destroy()
+		mmidx:Cleanup()
+	end
+	function mmidx:Add(val)
+		return Table.insertnget(tbl,val)
+	end
+	if parent then
+		Table.insert(parent,tbl)
+	end
+	return tbl
 end
 
 function Table.callall<T,U...>(arr:{T},fn:(T,U...) -> any?,...:U...)

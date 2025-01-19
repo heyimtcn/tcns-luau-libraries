@@ -3,7 +3,9 @@
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
-      "$path": "libs"
+      "Libs": {
+        "$path": "libs"
+      }
     }
   }
 }

@@ -9,6 +9,8 @@ export type Default<T> = {
 	Muted:boolean,
 	Changed:Signal.Signal<T>,
 	Kind:"Default" | "Computed" | "Animated",
+	Get:(self:Default<T>) -> T,
+	Set:(self:Default<T>,val:T) -> (),
 	AttachToProp:(self:Default<T>,inst:Instance,name:string) -> Signal.Connection<any>,
 	AttachToAttr:(self:Default<T>,inst:Instance,name:string) -> Signal.Connection<any>,
 	Clone:(self:Default<T>) -> (),
@@ -157,6 +159,14 @@ end
 
 function ValueContainer.is(obj:any):boolean
 	return type(obj) == "table" and getmetatable(obj).ClassName == "ValueContainer"
+end
+
+function methods:Get()
+	return self.Value
+end
+
+function methods:Set(val)
+	self.Value = val
 end
 
 function methods:AttachToProp(inst,name)
