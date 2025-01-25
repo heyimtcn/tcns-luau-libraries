@@ -1,10 +1,10 @@
 --!nocheck
 
 local RunService = game:GetService("RunService")
-local Signal = require(script.Signal)
-local PropertyHandler = require(script.PropertyHandler)
-local LerpUtils = require(script.LerpUtils)
-local table = require(script.Table)
+local Signal = require(script.Parent.Signal)
+local ReactiveTable = require(script.Parent.ReactiveTable)
+local LerpUtils = require(script.Parent.LerpUtils)
+local table = require(script.Parent.Table)
 
 export type Settings = {
 	Lenght:number,
@@ -42,7 +42,7 @@ local TweenPlus = {
 }
 
 local prototype:Tween = {}
-local object_creator = PropertyHandler.extend(prototype)
+local object_creator = ReactiveTable.extend(prototype)
 prototype.__index = prototype
 TweenPlus.prototype = prototype
 TweenPlus.ClassName = "TweenPlus"

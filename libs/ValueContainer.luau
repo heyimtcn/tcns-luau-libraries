@@ -1,8 +1,8 @@
 --!nocheck
 
 local RunService = game:GetService("RunService")
-local Signal = require(script.Signal)
-local LerpUtils = require(script.LerpUtils)
+local Signal = require(script.Parent.Signal)
+local LerpUtils = require(script.Parent.LerpUtils)
 
 export type Default<T> = {
 	Value:T,
@@ -49,6 +49,9 @@ prototype.__newindex = function(tbl,key,val)
 		if not rawget(tbl,"Muted") then
 			tbl.Changed:Fire(val)
 		end
+		return
+	end
+	if val == tbl._value then
 		return
 	end
 	rawset(tbl,key,val)

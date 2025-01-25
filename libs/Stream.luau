@@ -1,6 +1,6 @@
 --!nocheck
 
-local Signal = require(script.Signal)
+local Signal = require(script.Parent.Signal)
 
 export type Stream<T...> = {
 	Appended:Signal.Signal<T...>,

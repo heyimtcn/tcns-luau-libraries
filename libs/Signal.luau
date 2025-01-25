@@ -1,7 +1,5 @@
 --!nocheck
 
-local Promise = require(script.Promise)
-
 export type Signal<T...> = {
 	Enabled:boolean,
 	Connections:{Connection<T...>},
@@ -140,14 +138,6 @@ function prototype:WaitUntil(fn)
 		end,...)
 	end)
 	return coroutine.yield()
-end
-
-function prototype:Promisify()
-	return Promise.new(function(res)
-		self:Once(function(...)
-			res(...)
-		end)
-	end)
 end
 
 function prototype:DisconnectAll()

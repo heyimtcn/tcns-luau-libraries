@@ -1,8 +1,8 @@
 --!nocheck
 
-local Signal = require(script.Signal)
-local table = require(script.Table)
-local Stream = require(script.Stream)
+local Signal = require(script.Parent.Signal)
+local table = require(script.Parent.Table)
+local Stream = require(script.Parent.Stream)
 
 export type Process = {
 	NewRun:Signal.Signal<any?>,

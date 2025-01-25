@@ -1,23 +1,23 @@
 --!nocheck
 
-local Signal = require(script.Signal)
+local Signal = require(script.Parent.Signal)
 
-export type PropertyHandler = {
+export type ReactiveTable = {
 	Changed:Signal.Signal<any>,
-	GetChangedSignal:(self:PropertyHandler,key:any) -> Signal.Signal<>,
+	GetChangedSignal:(self:ReactiveTable,key:any) -> Signal.Signal<>,
 }
 
-local PropertyHandler = {}
-PropertyHandler.ClassName = "PropertyHandler"
+local ReactiveTable = {}
+ReactiveTable.ClassName = "ReactiveTable"
 
-function PropertyHandler.new<T>(defs:T,locked:boolean?):PropertyHandler & T
+function ReactiveTable.new<T>(defs:T,locked:boolean?):ReactiveTable & T
 	locked = if locked == nil then false else locked
 	local changed_signals = {}
 	for name, _ in pairs(defs) do
 		changed_signals[name] = Signal.new()
 	end
 	local handler = {
-		ClassName = "PropertyHandler",
+		ClassName = "ReactiveTable",
 		_props = defs,
 		_changed_signals = changed_signals,
 		Changed = Signal.new() :: Signal.Signal<any>,
@@ -53,10 +53,13 @@ function PropertyHandler.new<T>(defs:T,locked:boolean?):PropertyHandler & T
 				handler:GetChangedSignal(key):Fire()
 			end
 		end,
+		__iter = function(tbl)
+			return pairs(tbl._props)
+		end,
 	})
 end
 
-function PropertyHandler.extend<A>(prototype:A)
+function ReactiveTable.extend<A>(prototype:A)
 	return function<B>(obj:B):A & B & {PropertyChanged:Signal.Signal<key>,GetPropertyChangedSignal:(self:any,key:any) -> Signal.Signal<>}
 		local property_changed = Signal.new()
 		local changed_signals = {}
@@ -98,8 +101,11 @@ function PropertyHandler.extend<A>(prototype:A)
 	end
 end
 
-function PropertyHandler.is(obj:any):boolean
-	return type(obj) == "table" and getmetatable(obj).ClassName == "PropertyHandler"
+function ReactiveTable.is(obj:any):boolean
+	if type(obj) ~= "table" then
+		return false
+	end
+	return obj.ClassName == "ReactiveTable"
 end
 
-return PropertyHandler
+return ReactiveTable

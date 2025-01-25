@@ -1,4 +1,4 @@
-local table = require(script.Table)
+local table = require(script.Parent.Table)
 
 local String = {}
 

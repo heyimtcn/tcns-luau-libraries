@@ -1,4 +1,4 @@
-local Stream = require(script.Stream)
+local Stream = require(script.Parent.Stream)
 
 local Tester = {
 	Enum = {

@@ -1,8 +1,8 @@
 --!nocheck
 
-local ValueContainer = require(script.ValueContainer)
-local table = require(script.Table)
-local PropertyHandler = require(script.PropertyHandler)
+local ValueContainer = require(script.Parent.ValueContainer)
+local table = require(script.Parent.Table)
+local ReactiveTable = require(script.Parent.ReactiveTable)
 
 local Mounter = {}
 
@@ -62,19 +62,7 @@ end
 
 function Mounter.tags(inst:Instance,tags:{string}):table.CleanupContainer
 	local cleanup_container = table.cleanupcontainer()
-	local track
-	local tbl_type = table.gettype(tags)
-	if tbl_type == "dict" or tbl_type == "mixed" then
-		track = true
-	else
-		track = false
-	end
-	if not track then
-		for _, tag in tags do
-			inst:AddTag(tag)
-		end
-	else
-		local tracked_tags = PropertyHandler.new(tags)
+	if ReactiveTable.is(tags) then
 		for key, tag_or_enabled in tags do
 			local key_type = type(key)
 			if key_type == "number" then
@@ -85,27 +73,34 @@ function Mounter.tags(inst:Instance,tags:{string}):table.CleanupContainer
 				end
 			end
 		end
-		cleanup_container:Add(tracked_tags.Changed:Connect(function(tag)
+		cleanup_container:Add(tags.Changed:Connect(function(tag)
 			if type(tag) == "string" then
-				if tracked_tags[tag] and not inst:HasTag(tag) then
+				if tags[tag] and not inst:HasTag(tag) then
 					inst:AddTag(tag)
 				elseif inst:HasTag(tag) then
 					inst:RemoveTag(tag)
 				end
 			end
 		end))
+	else
+		for _, tag in tags do
+			inst:AddTag(tag)
+		end
 	end
 	return cleanup_container
 end
 
-function Mounter.children(inst:Instance,children:{Instance})
+function Mounter.children(inst:Instance,children:{Instance}):table.CleanupContainer
+	local cleanup_container = table.cleanupcontainer() 
 	for _, child in ipairs(children) do
 		child.Parent = inst
+		cleanup_container:Add(child)
 	end
+	return cleanup_container
 end
 
-function Mounter.instance(inst:Instance,fn:(inst:Instance) -> ())
-	fn(inst)
+function Mounter.instance(inst:Instance,fn:(inst:Instance) -> table.CleanupType?):table.CleanupType?
+	return fn(inst)
 end
 
 function Mounter.attributes(inst:Instance,attrs:{[string]:any}):table.CleanupContainer
