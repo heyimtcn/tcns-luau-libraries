@@ -239,7 +239,7 @@ function Table.keyof(tbl:{[any]:any},val:any):any?
 	return nil
 end
 
-function Table.merge(...:{[any]:any})
+function Table.merge(...:{[any]:any}):{[any]:any}
 	local new_tbl = {}
 	for _, tbl in pairs({...}) do
 		for key, val in pairs(tbl) do
@@ -258,7 +258,7 @@ function Table.contains<T>(tbl:{[any]:T},val:T):boolean
 	return false
 end
 
-function Table.shuffle<T>(arr:{T},rng:Random?,same_arr:boolean?)
+function Table.shuffle<T>(arr:{T},rng:Random?,same_arr:boolean?):{T}
 	local shuffled = if same_arr then arr else Table.clone(arr)
 	local random = if rng then rng else Random.new()
 	for i = #arr, 2, -1 do
@@ -268,7 +268,7 @@ function Table.shuffle<T>(arr:{T},rng:Random?,same_arr:boolean?)
 	return shuffled
 end
 
-function Table.sample<T>(arr:{T},size:number,rng:Random?,same_arr:boolean?)
+function Table.sample<T>(arr:{T},size:number,rng:Random?,same_arr:boolean?):{T}
 	local new_arr = if same_arr then arr else Table.clone(arr)
 	local random = if rng then rng else Random.new()
 	Table.shuffle(new_arr,rng,true)
@@ -481,7 +481,7 @@ function Table.invert<T,U>(tbl:{[T]:U},same_tbl:boolean?):{[U]:T}
 	return new_tbl
 end
 
-function Table.sync(src:{[any]:any},tmpl:{[any]:any},same_tbl:boolean?)
+function Table.sync(src:{[any]:any},tmpl:{[any]:any},same_tbl:boolean?):{[any]:any}
 	local new_tbl = if same_tbl then src else {}
 	local current_values = Table.clone(src)
 	Table.clear(new_tbl)
@@ -504,7 +504,7 @@ function Table.sync(src:{[any]:any},tmpl:{[any]:any},same_tbl:boolean?)
 	return new_tbl
 end
 
-function Table.reconcile(src:{[any]:any},tmpl:{[any]:any},same_tbl:boolean?)
+function Table.reconcile(src:{[any]:any},tmpl:{[any]:any},same_tbl:boolean?):{[any]:any}
 	local new_tbl = if same_tbl then src else {}
 	local current_values = Table.clone(src)
 	Table.clear(new_tbl)
