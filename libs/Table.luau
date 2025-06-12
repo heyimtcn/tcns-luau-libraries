@@ -275,6 +275,11 @@ function Table.sample<T>(arr:{T},size:number,rng:Random?,same_arr:boolean?):{T}
 	return Table.slice(new_arr,1,size,same_arr)
 end
 
+function Table.random<T>(arr:{T},rng:Random?):T
+	local random = if rng then rng else Random.new()
+	return arr[random:NextInteger(1,#arr)]
+end
+
 function Table.haskey(tbl:{[any]:any},key:any):boolean
 	return tbl[key] ~= nil
 end
