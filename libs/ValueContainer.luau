@@ -146,17 +146,45 @@ function ValueContainer.from_signal<T>(signal:Signal.Signal<T>,def:T?):Default<a
 	return val_cont
 end
 
-function ValueContainer.from_prop(inst:Instance,name:string):Default<any>
+function ValueContainer.synced_to_prop(inst:Instance,name:string):Default<any>
 	local val_cont = ValueContainer.new(inst[name])
+	local inst_changed, val_cont_changed = false, false
 	inst:GetPropertyChangedSignal(name):Connect(function()
+		if val_cont_changed then
+			val_cont_changed = false
+			return
+		end
 		val_cont.Value = inst[name]
+		inst_changed = true
+	end)
+	val_cont.Connect(function(val)
+		if inst_changed then
+			inst_changed = false
+			return
+		end
+		inst[name] = val_cont.Value
+		val_cont_changed = true 
 	end)
 end
 
-function ValueContainer.from_attr(inst:Instance,name:string):Default<any>
+function ValueContainer.synced_to_attr(inst:Instance,name:string):Default<any>
 	local val_cont = ValueContainer.new(inst:GetAttribute(name))
+	local inst_changed, val_cont_changed = false, false
 	inst:GetAttributeChangedSignal(name):Connect(function()
+		if val_cont_changed then
+			val_cont_changed = false
+			return
+		end
 		val_cont.Value = inst:GetAttribute(name)
+		inst_changed = true
+	end)
+	val_cont.Connect(function(val)
+		if inst_changed then
+			inst_changed = false
+			return
+		end
+		inst:SetAttribute(name,val_cont.Value)
+		val_cont_changed = true
 	end)
 end
 
@@ -172,17 +200,45 @@ function methods:Set(val)
 	self.Value = val
 end
 
-function methods:AttachToProp(inst,name)
+function methods:SyncToProp(inst,name)
 	inst[name] = self.Value
-	self.Changed:Connect(function(val)
-		inst[name] = val
+	local inst_changed, val_cont_changed = false, false
+	inst:GetPropertyChangedSignal(name):Connect(function()
+		if val_cont_changed then
+			val_cont_changed = false
+			return
+		end
+		self.Value = inst[name]
+		inst_changed = true
+	end)
+	self.Connect(function(val)
+		if inst_changed then
+			inst_changed = false
+			return
+		end
+		inst[name] = self.Value
+		val_cont_changed = true 
 	end)
 end
 
-function methods:AttachToAttr(inst,name)
+function methods:SyncToAttr(inst,name)
 	inst:SetAttribute(name,self.Value)
-	self.Changed:Connect(function(val)
-		inst:SetAttribute(name,val)
+	local inst_changed, val_cont_changed = false, false
+	inst:GetAttributeChangedSignal(name):Connect(function()
+		if val_cont_changed then
+			val_cont_changed = false
+			return
+		end
+		self.Value = inst:GetAttribute(name)
+		inst_changed = true
+	end)
+	self.Connect(function(val)
+		if inst_changed then
+			inst_changed = false
+			return
+		end
+		inst:SetAttribute(name,self.Value)
+		val_cont_changed = true
 	end)
 end
 
