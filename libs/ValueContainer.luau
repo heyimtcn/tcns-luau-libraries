@@ -11,8 +11,8 @@ export type Default<T> = {
 	Kind:"Default" | "Computed" | "Animated",
 	Get:(self:Default<T>) -> T,
 	Set:(self:Default<T>,val:T) -> (),
-	SyncToProp:(self:Default<T>,inst:Instance,name:string) -> Signal.Connection<any>,
-	SyncToAttr:(self:Default<T>,inst:Instance,name:string) -> Signal.Connection<any>,
+	SyncToProp:(self:Default<T>,inst:Instance,name:string) -> (RBXScriptConnection,Signal.Connection<any>),
+	SyncToAttr:(self:Default<T>,inst:Instance,name:string) -> (RBXScriptConnection,Signal.Connection<any>),
 	Clone:(self:Default<T>) -> (),
 	Destroy:(self:Default<T>) -> Default<T>,
 }
@@ -147,10 +147,10 @@ function ValueContainer.from_signal<T>(signal:Signal.Signal<T>,def:T?):Default<a
 end
 
 --ROBLOX SIGNALS MAY BE DEFFERED
-function ValueContainer.synced_to_prop(inst:Instance,name:string):Default<any>
+function ValueContainer.synced_to_prop(inst:Instance,name:string):(Default<any>,RBXScriptConnection,Signal.Connection<any>)
 	local val_cont = ValueContainer.new(inst[name])
 	local inst_changed, val_cont_changed = false, false
-	inst:GetPropertyChangedSignal(name):Connect(function()
+	local inst_conn = inst:GetPropertyChangedSignal(name):Connect(function()
 		if val_cont_changed then
 			val_cont_changed = false
 			return
@@ -158,7 +158,7 @@ function ValueContainer.synced_to_prop(inst:Instance,name:string):Default<any>
 		val_cont.Value = inst[name]
 		inst_changed = true
 	end)
-	val_cont.Changed:Connect(function(val)
+	local self_conn = val_cont.Changed:Connect(function(val)
 		if inst_changed then
 			inst_changed = false
 			return
@@ -166,14 +166,14 @@ function ValueContainer.synced_to_prop(inst:Instance,name:string):Default<any>
 		inst[name] = val_cont.Value
 		val_cont_changed = true 
 	end)
-	return val_cont
+	return val_cont, inst_conn, self_conn
 end
 
 --ROBLOX SIGNALS MAY BE DEFFERED
-function ValueContainer.synced_to_attr(inst:Instance,name:string):Default<any>
+function ValueContainer.synced_to_attr(inst:Instance,name:string):(Default<any>,RBXScriptConnection,Signal.Connection<any>)
 	local val_cont = ValueContainer.new(inst:GetAttribute(name))
 	local inst_changed, val_cont_changed = false, false
-	inst:GetAttributeChangedSignal(name):Connect(function()
+	local inst_conn = inst:GetAttributeChangedSignal(name):Connect(function()
 		if val_cont_changed then
 			val_cont_changed = false
 			return
@@ -181,7 +181,7 @@ function ValueContainer.synced_to_attr(inst:Instance,name:string):Default<any>
 		val_cont.Value = inst:GetAttribute(name)
 		inst_changed = true
 	end)
-	val_cont.Changed:Connect(function(val)
+	local self_conn = val_cont.Changed:Connect(function(val)
 		if inst_changed then
 			inst_changed = false
 			return
@@ -189,7 +189,7 @@ function ValueContainer.synced_to_attr(inst:Instance,name:string):Default<any>
 		inst:SetAttribute(name,val_cont.Value)
 		val_cont_changed = true
 	end)
-	return val_cont
+	return val_cont, inst_conn, self_conn
 end
 
 function ValueContainer.is(obj:any):boolean
@@ -208,7 +208,7 @@ end
 function methods:SyncToProp(inst,name)
 	inst[name] = self.Value
 	local inst_changed, val_cont_changed = false, false
-	inst:GetPropertyChangedSignal(name):Connect(function()
+	local inst_conn = inst:GetPropertyChangedSignal(name):Connect(function()
 		if val_cont_changed then
 			val_cont_changed = false
 			return
@@ -216,7 +216,7 @@ function methods:SyncToProp(inst,name)
 		self.Value = inst[name]
 		inst_changed = true
 	end)
-	self.Changed:Connect(function(val)
+	local self_conn = self.Changed:Connect(function(val)
 		if inst_changed then
 			inst_changed = false
 			return
@@ -224,13 +224,14 @@ function methods:SyncToProp(inst,name)
 		inst[name] = self.Value
 		val_cont_changed = true 
 	end)
+	return inst_conn, self_conn
 end
 
 --ROBLOX SIGNALS MAY BE DEFFERED
 function methods:SyncToAttr(inst,name)
 	inst:SetAttribute(name,self.Value)
 	local inst_changed, val_cont_changed = false, false
-	inst:GetAttributeChangedSignal(name):Connect(function()
+	local inst_conn = inst:GetAttributeChangedSignal(name):Connect(function()
 		if val_cont_changed then
 			val_cont_changed = false
 			return
@@ -238,7 +239,7 @@ function methods:SyncToAttr(inst,name)
 		self.Value = inst:GetAttribute(name)
 		inst_changed = true
 	end)
-	self.Changed:Connect(function(val)
+	local self_conn = self.Changed:Connect(function(val)
 		if inst_changed then
 			inst_changed = false
 			return
@@ -246,6 +247,7 @@ function methods:SyncToAttr(inst,name)
 		inst:SetAttribute(name,self.Value)
 		val_cont_changed = true
 	end)
+	return inst_conn, self_conn
 end
 
 function methods:Clone()
