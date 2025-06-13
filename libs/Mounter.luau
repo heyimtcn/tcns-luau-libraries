@@ -18,9 +18,7 @@ local function _mount(inst:Instance,config:MounterConfig):table.CleanupContainer
 				continue
 			end
 			if ValueContainer.is(prop_val) then
-				cleanup_container:Add(prop_val.Changed:Connect(function(val)
-					inst[prop_key] = val
-				end))
+				cleanup_container:Add(prop_val:SyncToProp(inst,prop_key))
 			else
 				inst[prop_key] = prop_val
 			end
@@ -33,9 +31,7 @@ local function _mount(inst:Instance,config:MounterConfig):table.CleanupContainer
 	end
 	if parent then
 		if ValueContainer.is(parent) then
-			cleanup_container:Add(parent.Changed:Connect(function(val)
-				inst.Parent = val
-			end))
+			cleanup_container:Add(parent:SyncToProp(inst,"Parent"))
 		else
 			inst.Parent = parent
 		end
@@ -107,9 +103,7 @@ function Mounter.attributes(inst:Instance,attrs:{[string]:any}):table.CleanupCon
 	local cleanup_container = table.cleanupcontainer()
 	for attr_name, attr_val in pairs(attrs) do
 		if ValueContainer.is(attr_val) then
-			cleanup_container:Add(attr_val.Changed:Connect(function(val)
-				inst:SetAttribute(attr_name,val)
-			end))
+			cleanup_container:Add(attr_val:SyncToAttr(inst,attr_name))
 		else
 			inst:SetAttribute(attr_name,attr_val)
 		end
