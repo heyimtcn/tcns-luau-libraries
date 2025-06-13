@@ -561,7 +561,7 @@ end
 
 export type Destroyable = {Destroy:(self:Destroyable) -> ()}
 export type Disconnectable = {Disconnect:(self:Disconnectable) -> ()}
-export type CleanupContainer = {Cleanup:(self:CleanupContainer) -> (),Destroy:(self:CleanupContainer) -> (),Add:<T>(self:CleanupContainer,val:T) -> T,[number]:CleanupType}
+export type CleanupContainer = {Cleanup:(self:CleanupContainer) -> (),Destroy:(self:CleanupContainer) -> (),Add:<T>(self:CleanupContainer,...T) -> ...T,[number]:CleanupType}
 export type CleanupType = Instance|RBXScriptConnection|thread|() -> ()|Destroyable|Disconnectable|CleanupContainer
 
 function Table.cleanup(arr:{CleanupType})
@@ -602,8 +602,9 @@ function Table.cleanupcontainer(parent:CleanupContainer?):CleanupContainer
 	function mmidx:Destroy()
 		mmidx:Cleanup()
 	end
-	function mmidx:Add(val)
-		return Table.insertnget(tbl,val)
+	function mmidx:Add(...)
+		Table.append(tbl,{...},true)
+		return ...
 	end
 	if parent then
 		Table.insert(parent,tbl)
