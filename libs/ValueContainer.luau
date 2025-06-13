@@ -11,8 +11,8 @@ export type Default<T> = {
 	Kind:"Default" | "Computed" | "Animated",
 	Get:(self:Default<T>) -> T,
 	Set:(self:Default<T>,val:T) -> (),
-	AttachToProp:(self:Default<T>,inst:Instance,name:string) -> Signal.Connection<any>,
-	AttachToAttr:(self:Default<T>,inst:Instance,name:string) -> Signal.Connection<any>,
+	SyncToProp:(self:Default<T>,inst:Instance,name:string) -> Signal.Connection<any>,
+	SyncToAttr:(self:Default<T>,inst:Instance,name:string) -> Signal.Connection<any>,
 	Clone:(self:Default<T>) -> (),
 	Destroy:(self:Default<T>) -> Default<T>,
 }
@@ -146,6 +146,7 @@ function ValueContainer.from_signal<T>(signal:Signal.Signal<T>,def:T?):Default<a
 	return val_cont
 end
 
+--ROBLOX SIGNALS MAY BE DEFFERED
 function ValueContainer.synced_to_prop(inst:Instance,name:string):Default<any>
 	local val_cont = ValueContainer.new(inst[name])
 	local inst_changed, val_cont_changed = false, false
@@ -157,7 +158,7 @@ function ValueContainer.synced_to_prop(inst:Instance,name:string):Default<any>
 		val_cont.Value = inst[name]
 		inst_changed = true
 	end)
-	val_cont.Connect(function(val)
+	val_cont.Changed:Connect(function(val)
 		if inst_changed then
 			inst_changed = false
 			return
@@ -165,8 +166,10 @@ function ValueContainer.synced_to_prop(inst:Instance,name:string):Default<any>
 		inst[name] = val_cont.Value
 		val_cont_changed = true 
 	end)
+	return val_cont
 end
 
+--ROBLOX SIGNALS MAY BE DEFFERED
 function ValueContainer.synced_to_attr(inst:Instance,name:string):Default<any>
 	local val_cont = ValueContainer.new(inst:GetAttribute(name))
 	local inst_changed, val_cont_changed = false, false
@@ -178,7 +181,7 @@ function ValueContainer.synced_to_attr(inst:Instance,name:string):Default<any>
 		val_cont.Value = inst:GetAttribute(name)
 		inst_changed = true
 	end)
-	val_cont.Connect(function(val)
+	val_cont.Changed:Connect(function(val)
 		if inst_changed then
 			inst_changed = false
 			return
@@ -186,6 +189,7 @@ function ValueContainer.synced_to_attr(inst:Instance,name:string):Default<any>
 		inst:SetAttribute(name,val_cont.Value)
 		val_cont_changed = true
 	end)
+	return val_cont
 end
 
 function ValueContainer.is(obj:any):boolean
@@ -200,6 +204,7 @@ function methods:Set(val)
 	self.Value = val
 end
 
+--ROBLOX SIGNALS MAY BE DEFFERED
 function methods:SyncToProp(inst,name)
 	inst[name] = self.Value
 	local inst_changed, val_cont_changed = false, false
@@ -211,7 +216,7 @@ function methods:SyncToProp(inst,name)
 		self.Value = inst[name]
 		inst_changed = true
 	end)
-	self.Connect(function(val)
+	self.Changed:Connect(function(val)
 		if inst_changed then
 			inst_changed = false
 			return
@@ -221,6 +226,7 @@ function methods:SyncToProp(inst,name)
 	end)
 end
 
+--ROBLOX SIGNALS MAY BE DEFFERED
 function methods:SyncToAttr(inst,name)
 	inst:SetAttribute(name,self.Value)
 	local inst_changed, val_cont_changed = false, false
@@ -232,7 +238,7 @@ function methods:SyncToAttr(inst,name)
 		self.Value = inst:GetAttribute(name)
 		inst_changed = true
 	end)
-	self.Connect(function(val)
+	self.Changed:Connect(function(val)
 		if inst_changed then
 			inst_changed = false
 			return
