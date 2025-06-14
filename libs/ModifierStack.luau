@@ -19,7 +19,7 @@ export type ModifierStack<T> = {
 	GetModifiers:(self:ModifierStack<T>) -> {Modifier<T>},
 	GetOperators:(self:ModifierStack<T>) -> {[Operator|string]:(acc:T,val:T) -> T},
 	GetOrder:(self:ModifierStack<T>) -> {Operator|string},
-	BindToInstance:(self:ModifierStack<T>,obj:Instance|{[string]:any},prop:string,def:T) -> (() -> ())
+	BindTo:(self:ModifierStack<T>,obj:Instance|{[string]:any},prop:string,def:T) -> (() -> ())
 }
 
 local ModifierStack = {}
