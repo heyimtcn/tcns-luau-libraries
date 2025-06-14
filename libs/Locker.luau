@@ -46,7 +46,7 @@ function prototype:Unlock()
 end
 
 function prototype:Destroy()
-	for _, thread in ipairs(self._queue) do
+	for _, thread in self._queue do
 		task.defer(thread)
 	end
 	table.clear(self)
