@@ -52,13 +52,12 @@ function conn_prototype:Disconnect()
 end
 
 function Signal.new<T...>():Signal<T...>
-	local obj = setmetatable({
+	return setmetatable({
 		Enabled = true,
 		Connections = {},
 		_last_conn_id = 0,
 		_external_connections = {}
 	},prototype)
-	return obj
 end
 
 function Signal.is(obj:any):boolean
@@ -75,7 +74,7 @@ end
 
 function Signal.merge(...:Signal):Signal
 	local new_sig = Signal.new()
-	for _, sig:Signal in pairs({...}) do
+	for _, sig:Signal in {...} do
 		sig:Connect(function(...)
 			new_sig:Fire(...)
 		end)
@@ -87,13 +86,13 @@ function prototype:Fire(...)
 	if not self.Enabled then
 		return
 	end
-	for _, conn:Connection<any> in pairs(self.Connections) do
+	for _, conn:Connection<any> in self.Connections do
 		task.spawn(conn._fn,...)
 	end
 end
 
 function prototype:FireDefer(...)
-	for _, conn:Connection<any> in pairs(self.Connections) do
+	for _, conn:Connection<any> in self.Connections do
 		task.defer(conn._fn,...)
 	end
 end
@@ -140,7 +139,7 @@ function prototype:WaitUntil(fn)
 end
 
 function prototype:DisconnectAll()
-	for _, conn in pairs(self.Connections) do
+	for _, conn in self.Connections do
 		conn:Disconnect()
 	end
 end
@@ -169,7 +168,7 @@ function prototype:MultiMap(mods)
 	local new_sig = Signal.new()
 	local conn = self:Connect(function(...)
 		local mapped_arr = {...}
-		for _, mod in ipairs(mods) do
+		for _, mod in mods do
 			mapped_arr = {mod(table.unpack(mapped_arr))}
 		end
 		new_sig:Fire(table.unpack(mapped_arr))
@@ -181,7 +180,7 @@ end
 function prototype:MutliFilter(fns)
 	local new_sig = Signal.new()
 	local conn = self:Connect(function(...)
-		for _, fn in ipairs(fns) do
+		for _, fn in fns do
 			if not fn(...) then
 				return
 			end
@@ -194,7 +193,7 @@ end
 
 function prototype:Destroy()
 	self:DisconnectAll()
-	for _, conn in pairs(self._external_connections) do
+	for _, conn in self._external_connections do
 		conn:Disconnect()
 	end
 	table.clear(self)
