@@ -59,7 +59,7 @@ function prototype:Calculate<T>(val:T)
 	local operators_present = {}
 	local operator_modifiers:{[Operator|string]:Modifier<T>} = {}
 	local operator_funcs = self:GetOperators()
-	for name, mod in pairs(self:GetModifiers()) do
+	for name, mod in self:GetModifiers() do
 		if operator_modifiers[mod.Operator] == nil then
 			operator_modifiers[mod.Operator] = {}
 			table.insert(operators_present,mod.Operator)
@@ -67,9 +67,9 @@ function prototype:Calculate<T>(val:T)
 		table.insert(operator_modifiers[mod.Operator],mod)
 	end
 	local new_val = val
-	for _, operator in pairs(self:GetOrder()) do
+	for _, operator in self:GetOrder() do
 		if table.find(operators_present,operator) then
-			for _, mod:Modifier<T> in pairs(operator_modifiers[operator]) do
+			for _, mod:Modifier<T> in operator_modifiers[operator] do
 				new_val = operator_funcs[operator](new_val,mod.Value)
 			end
 		end
