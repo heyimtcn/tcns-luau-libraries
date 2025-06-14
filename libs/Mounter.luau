@@ -11,7 +11,7 @@ type MounterConfig = {[string|(inst:Instance,any) -> table.CleanupType?]:any}
 local function _mount(inst:Instance,config:MounterConfig):table.CleanupContainer
 	local cleanup_container = table.cleanupcontainer()
 	local parent
-	for prop_key, prop_val in pairs(config) do
+	for prop_key, prop_val in config do
 		if type(prop_key) == "string" then
 			if prop_key == "Parent" then
 				parent = prop_val
@@ -88,7 +88,7 @@ end
 
 function Mounter.children(inst:Instance,children:{Instance}):table.CleanupContainer
 	local cleanup_container = table.cleanupcontainer() 
-	for _, child in ipairs(children) do
+	for _, child in children do
 		child.Parent = inst
 		cleanup_container:Add(child)
 	end
@@ -101,7 +101,7 @@ end
 
 function Mounter.attributes(inst:Instance,attrs:{[string]:any}):table.CleanupContainer
 	local cleanup_container = table.cleanupcontainer()
-	for attr_name, attr_val in pairs(attrs) do
+	for attr_name, attr_val in attrs do
 		if ValueContainer.is(attr_val) then
 			cleanup_container:Add(attr_val:SyncToAttr(inst,attr_name))
 		else
@@ -129,9 +129,15 @@ function Mounter.on(prop_name:string):(inst:Instance,fn:(...any) -> ()) -> RBXSc
 	end
 end
 
-function Mounter.findfirstchild(name:string):(inst:Instance,config:MounterConfig|(inst:Instance) -> MounterConfig) -> table.CleanupContainer
+function Mounter.once(prop_name:string):(inst:Instance,fn:(...any) -> ()) -> RBXScriptSignal
+	return function(inst:Instance,fn:(...any) -> ())
+		return inst[prop_name]:Once(fn)
+	end
+end
+
+function Mounter.findfirstchild(name:string,recursive:boolean?):(inst:Instance,config:MounterConfig|(inst:Instance) -> MounterConfig) -> table.CleanupContainer
 	return function(inst:Instance,config:MounterConfig|(inst:Instance) -> MounterConfig)
-		return Mounter.mount(inst:FindFirstChild(name),config)
+		return Mounter.mount(inst:FindFirstChild(name,recursive),config)
 	end
 end
 
