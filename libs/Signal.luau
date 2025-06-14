@@ -64,7 +64,7 @@ function Signal.is(obj:any):boolean
 	return type(obj) == "table" and getmetatable(obj).ClassName == "Signal"
 end
 
-function Signal.wrap<T...>(signal:RBXScriptSignal|Signal<T...>)
+function Signal.wrap<T...>(signal:RBXScriptSignal|Signal<T...>):Signal<T...>
 	local sig = Signal.new()
 	signal:Connect(function(...)
 		sig:Fire(...)
