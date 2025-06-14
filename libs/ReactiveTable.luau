@@ -13,7 +13,7 @@ ReactiveTable.ClassName = "ReactiveTable"
 function ReactiveTable.new<T>(defs:T,locked:boolean?):ReactiveTable & T
 	locked = if locked == nil then false else locked
 	local changed_signals = {}
-	for name, _ in pairs(defs) do
+	for name, _ in defs do
 		changed_signals[name] = Signal.new()
 	end
 	local handler = {
@@ -63,7 +63,7 @@ function ReactiveTable.extend<A>(prototype:A)
 	return function<B>(obj:B):A & B & {PropertyChanged:Signal.Signal<key>,GetPropertyChangedSignal:(self:any,key:any) -> Signal.Signal<>}
 		local property_changed = Signal.new()
 		local changed_signals = {}
-		for key, _ in pairs(obj) do
+		for key, _ in obj do
 			if type(obj) ~= "function" then
 				changed_signals[key] = Signal.new()
 			end
