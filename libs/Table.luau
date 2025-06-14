@@ -57,7 +57,7 @@ function Table.repeattimes<T>(arr:{T},count:number,same_arr:boolean?):{T}
 	local new_arr = if same_arr then arr else Table.clone(arr)
 	local current_values = Table.clone(new_arr)
 	for count_idx = 0,count-1 do
-		for current_values_idx, current_values_val in ipairs(current_values) do
+		for current_values_idx, current_values_val in current_values do
 			new_arr[count_idx * #current_values + current_values_idx] = if count_idx == 0 then current_values_val else clone_value(current_values_val)	
 		end
 	end
@@ -109,7 +109,7 @@ end
 function Table.deepclone<T>(tbl:T):T
 	local function clone(c_tbl)
 		c_tbl = Table.clone(c_tbl)
-		for key, val in pairs(c_tbl) do
+		for key, val in c_tbl do
 			if type(val) == "table" then
 				c_tbl[key] = clone(val)
 			end
@@ -131,7 +131,7 @@ end
 
 function Table.filter<T,U>(tbl:{[T]:U},fn:(key:T,val:U) -> boolean,same_tbl:boolean?):{[T]:U}
 	local new_tbl = if same_tbl then tbl else Table.clone(tbl)
-	for key, value in pairs(new_tbl) do
+	for key, value in new_tbl do
 		new_tbl[key] = if fn(key,value) then new_tbl[key] else nil
 	end
 	return new_tbl
@@ -141,7 +141,7 @@ function Table.filterarr<T>(arr:{T},fn:(index:number,val:T) -> boolean,same_arr:
 	local new_arr = if same_arr then arr else {}
 	local current_values = Table.clone(arr)
 	Table.clear(new_arr)
-	for key, value in ipairs(current_values) do
+	for key, value in current_values do
 		if fn(key,value) then
 			Table.insert(new_arr,current_values[key])
 		end
@@ -150,7 +150,7 @@ function Table.filterarr<T>(arr:{T},fn:(index:number,val:T) -> boolean,same_arr:
 end
 
 function Table.any<T,U>(tbl:{[T]:U},fn:(key:T,val:U) -> boolean):boolean
-	for key, value in pairs(tbl) do
+	for key, value in tbl do
 		if fn(key,value) then
 			return true
 		end
@@ -160,7 +160,7 @@ end
 
 function Table.count<T,U>(tbl:{[T]:U},fn:(key:T,val:U) -> boolean):number
 	local amount = 0
-	for key, value in pairs(tbl) do
+	for key, value in tbl do
 		if fn(key,value) then
 			amount += 1
 		end
@@ -169,7 +169,7 @@ function Table.count<T,U>(tbl:{[T]:U},fn:(key:T,val:U) -> boolean):number
 end
 
 function Table.all<T,U>(tbl:{[T]:U},fn:(key:T,val:U) -> boolean):boolean
-	for key, value in pairs(tbl) do
+	for key, value in tbl do
 		if not fn(key,value) then
 			return false
 		end
@@ -181,7 +181,7 @@ function Table.map<A,B,C,D>(tbl:{[A]:B},fn:(key:A,val:B) -> (C,D),same_tbl:boole
 	local new_tbl = if same_tbl then tbl else {}
 	local current_values = Table.clone(tbl)
 	Table.clear(new_tbl)
-	for key, value in pairs(current_values) do
+	for key, value in current_values do
 		local new_key, new_value = fn(key,value)
 		if new_key ~= nil then
 			new_tbl[new_key] = new_value
@@ -194,7 +194,7 @@ function Table.arrmap<A,B>(arr:{A},fn:(val:A) -> B,same_arr:boolean?):{B}
 	local new_arr = if same_arr then arr else {}
 	local current_values = Table.clone(arr)
 	Table.clear(new_arr)
-	for _, value in pairs(current_values) do
+	for _, value in current_values do
 		local new_value = fn(value)
 		if new_value ~= nil then
 			Table.insert(new_arr,new_value)
@@ -207,11 +207,11 @@ function Table.flatmap<A,B>(arr:{A},fn:(val:A) -> {B},same_arr:boolean?):{B}
 	local new_arr = if same_arr then arr else {}
 	local current_values = Table.clone(arr)
 	Table.clear(new_arr)
-	for _, value in pairs(current_values) do
+	for _, value in current_values do
 		local new_value = fn(value)
 		if new_value ~= nil then
 			if type(new_value) == "table" then
-				for _, unwrapped in ipairs(new_value) do
+				for _, unwrapped in new_value do
 					Table.insert(new_arr,unwrapped)
 				end
 			else
@@ -231,7 +231,7 @@ function Table.pair<T,U>(keys:{T},values:{U}):{[T]:U}
 end
 
 function Table.keyof(tbl:{[any]:any},val:any):any?
-	for key, tbl_val in pairs(tbl) do
+	for key, tbl_val in tbl do
 		if tbl_val == val then
 			return key
 		end
@@ -241,8 +241,8 @@ end
 
 function Table.merge(...:{[any]:any}):{[any]:any}
 	local new_tbl = {}
-	for _, tbl in pairs({...}) do
-		for key, val in pairs(tbl) do
+	for _, tbl in {...} do
+		for key, val in tbl do
 			new_tbl[key] = val
 		end
 	end
@@ -250,7 +250,7 @@ function Table.merge(...:{[any]:any}):{[any]:any}
 end
 
 function Table.contains<T>(tbl:{[any]:T},val:T):boolean
-	for _, tbl_val in pairs(tbl) do
+	for _, tbl_val in tbl do
 		if tbl_val == val then
 			return true
 		end
@@ -305,7 +305,7 @@ function Table.sortedinsert<T>(arr:{T},val:T,fn:((a:T,b:T) -> boolean)?,start_fr
 		return a > b
 	end
 	if not start_from_end then
-		for index, arr_val in ipairs(arr) do
+		for index, arr_val in arr do
 			if fn(arr_val,val) then
 				Table.insert(arr,index,val)
 				break
@@ -346,8 +346,8 @@ function Table.append<T>(arr:{T},...:{T}|boolean):{T}
 		Table.remove(app_arrs,#app_arrs)
 	end
 	local new_arr = if same_arr then arr else Table.clone(arr)
-	for _, app_arr in ipairs(app_arrs) do
-		for _, val in ipairs(app_arr) do
+	for _, app_arr in app_arrs do
+		for _, val in app_arr do
 			Table.insert(new_arr,val)
 		end
 	end
@@ -369,7 +369,7 @@ function Table.distinct<T>(arr:{T},same_arr:boolean?):{T}
 	local new_arr = if same_arr then arr else {}
 	local current_values = Table.clone(arr)
 	Table.clear(new_arr)
-	for _, val in ipairs(current_values) do
+	for _, val in current_values do
 		if not Table.contains(new_arr,val) then
 			Table.insert(new_arr,val)
 		end
@@ -381,7 +381,7 @@ function Table.removenils<T>(arr:{T},same_arr:boolean?):{T}
 	local new_arr = if same_arr then arr else {}
 	local current_values = Table.clone(arr)
 	Table.clear(new_arr)
-	for _,val in pairs(current_values) do
+	for _,val in current_values do
 		if val ~= nil then
 			Table.insert(new_arr,val)
 		end
@@ -394,7 +394,7 @@ function Table.flat<T>(arr:{{T}},same_arr:boolean?):{T}
 	local current_values = Table.clone(arr)
 	Table.clear(new_arr)
 	local function flat(flat_arr)
-		for _, val in ipairs(flat_arr) do
+		for _, val in flat_arr do
 			if type(val) == "table" then
 				flat(val)
 			else
@@ -412,7 +412,7 @@ function Table.flatdepth<T>(arr:{{T}},depth:number,same_arr:boolean?):{T}
 	local current_values = Table.clone(arr)
 	Table.clear(new_arr)
 	local function flat(flat_arr,flat_depth)
-		for _, val in ipairs(flat_arr) do
+		for _, val in flat_arr do
 			if type(val) == "table" and not (flat_depth == depth) then
 				flat(val,flat_depth+1)
 			else
@@ -425,7 +425,7 @@ function Table.flatdepth<T>(arr:{{T}},depth:number,same_arr:boolean?):{T}
 end
 
 function Table.findfn<T,U>(tbl:{[T]:U},fn:(key:T,el:U) -> boolean):(T?,U?)
-	for key, value in pairs(tbl) do
+	for key, value in tbl do
 		if fn(key,value) then
 			return key, value
 		end
@@ -434,7 +434,7 @@ function Table.findfn<T,U>(tbl:{[T]:U},fn:(key:T,el:U) -> boolean):(T?,U?)
 end
 
 function Table.findfirstfn<T>(arr:{T},fn:(el:T) -> boolean):(number?,T?)
-	for index, value in ipairs(arr) do
+	for index, value in arr do
 		if fn(value) then
 			return index, value
 		end
@@ -462,7 +462,7 @@ end
 
 function Table.keys<T>(tbl:{[T]:any}):{T}
 	local keys = {}
-	for key, _ in pairs(tbl) do
+	for key, _ in tbl do
 		Table.insert(keys,key)
 	end
 	return keys
@@ -470,7 +470,7 @@ end
 
 function Table.values<T>(tbl:{[any]:T}):{T}
 	local values = {}
-	for _, value in pairs(tbl) do
+	for _, value in tbl do
 		Table.insert(values,value)
 	end
 	return values
@@ -480,7 +480,7 @@ function Table.invert<T,U>(tbl:{[T]:U},same_tbl:boolean?):{[U]:T}
 	local new_tbl = if same_tbl then tbl else {}
 	local current_values = Table.clone(tbl)
 	Table.clear(new_tbl)
-	for key, value in pairs(current_values) do
+	for key, value in current_values do
 		new_tbl[value] = key
 	end
 	return new_tbl
@@ -491,7 +491,7 @@ function Table.sync(src:{[any]:any},tmpl:{[any]:any},same_tbl:boolean?):{[any]:a
 	local current_values = Table.clone(src)
 	Table.clear(new_tbl)
 	local function sync(tmpl_tbl:{[any]:any},src_tbl:{[any]:any},set_tbl:{[any]:any})
-		for key, val in pairs(tmpl_tbl) do
+		for key, val in tmpl_tbl do
 			local src_val = src_tbl[key]
 			if src_val then
 				if type(src_val) == "table" then
@@ -514,7 +514,7 @@ function Table.reconcile(src:{[any]:any},tmpl:{[any]:any},same_tbl:boolean?):{[a
 	local current_values = Table.clone(src)
 	Table.clear(new_tbl)
 	local function reconcile(tmpl_tbl:{[any]:any},src_tbl:{[any]:any},set_tbl:{[any]:any})
-		for key, val in pairs(tmpl_tbl) do
+		for key, val in tmpl_tbl do
 			local src_val = src_tbl[key]
 			if src_val then
 				if type(src_val) == "table" then
@@ -528,7 +528,7 @@ function Table.reconcile(src:{[any]:any},tmpl:{[any]:any},same_tbl:boolean?):{[a
 			end
 		end
 		local tmpl_keys = Table.keys(tmpl_tbl)
-		for key, val in pairs(src_tbl) do
+		for key, val in src_tbl do
 			if not Table.contains(tmpl_keys,key) then
 				set_tbl[key] = val
 			end
@@ -565,7 +565,7 @@ export type CleanupContainer = {Cleanup:(self:CleanupContainer) -> (),Destroy:(s
 export type CleanupType = Instance|RBXScriptConnection|thread|() -> ()|Destroyable|Disconnectable|CleanupContainer
 
 function Table.cleanup(arr:{CleanupType})
-	for _, val in ipairs(arr) do
+	for _, val in arr do
 		local typ = typeof(val)
 		if typ == "Instance" then
 			val:Destroy()
@@ -613,13 +613,13 @@ function Table.cleanupcontainer(parent:CleanupContainer?):CleanupContainer
 end
 
 function Table.callall<T,U...>(arr:{T},fn:(T,U...) -> any?,...:U...)
-	for _, val in ipairs(arr) do
+	for _, val in arr do
 		fn(val,...)
 	end
 end
 
 function Table.callallmethod(arr:{any},method_name:any,...)
-	for _, val in ipairs(arr) do
+	for _, val in arr do
 		val[method_name](val,...)
 	end
 end
