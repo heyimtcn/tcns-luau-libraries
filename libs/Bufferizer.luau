@@ -37,7 +37,7 @@ local Bufferizer = {
 
 local function array_size(arr:{any}):number
 	local size = 4 --2 + 2 (lenght + size)
-	for _, val in ipairs(arr) do
+	for _, val in arr do
 		local val_size = select(2,Bufferizer.get_value_type(val))
 		size += 1 + val_size
 	end
@@ -97,7 +97,7 @@ function Bufferizer.from_bytes(arr:{number}):buffer
 	end),"invalid array")
 	local buf = buffer.create(#arr)
 	local offset = 0
-	for _, val in ipairs(arr) do
+	for _, val in arr do
 		buffer.writeu8(buf,offset,val)
 		offset += 1
 	end
@@ -226,7 +226,7 @@ function Bufferizer.bufferize(val):buffer?
 		offset += 2
 		buffer.writeu16(buf,offset,#arr)
 		offset += 2
-		for _, arr_val in ipairs(arr) do
+		for _, arr_val in arr do
 			local iter_buf = Bufferizer.bufferize(arr_val)
 			local iter_buf_len = buffer.len(iter_buf)
 			buffer.copy(buf,offset,iter_buf,0,iter_buf_len)
@@ -401,7 +401,7 @@ function Bufferizer.extract(buf:buffer):any?
 	elseif val_type == ValueType.Instance then
 		local path = buffer.readstring(buf,3,buffer.readu16(buf,1))
 		local inst = game
-		for _, name in ipairs(path:split(".")) do
+		for _, name in path:split(".") do
 			local loop_inst = inst:FindFirstChild(name)
 			if loop_inst then
 				inst = loop_inst
