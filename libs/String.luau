@@ -36,7 +36,7 @@ function String.multifinditer(str:string,subs:{string},raw:boolean?):() -> (stri
 	return function()
 		local lowest_num
 		local lowest
-		for _, sub in ipairs(subs) do
+		for _, sub in subs do
 			local sub_first_idx, sub_last_idx = String.find(str,sub,last_idx,raw)
 			if sub_first_idx and sub_last_idx then
 				if lowest_num == nil or sub_last_idx < lowest_num then
@@ -142,7 +142,7 @@ end
 
 function String.indentwidth(str:string):number
 	local amount = 0
-	for _, char in ipairs(String.characters(str)) do
+	for _, char in String.characters(str) do
 		if char == " " or char == "\t" then
 			amount += 1
 		else
@@ -153,7 +153,7 @@ function String.indentwidth(str:string):number
 end
 
 function String.isascii(str:string):boolean
-	for _, char in ipairs(String.characters(str)) do
+	for _, char in String.characters(str) do
 		local byte = String.byte(char)
 		if byte > 127 then
 			return false
