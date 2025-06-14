@@ -80,12 +80,12 @@ function ValueContainer.computed<T,U>(fn:(...U) -> T,...:any):Computed<T>
 			return
 		end
 		local vals = {}
-		for _, dep in ipairs(deps) do
+		for _, dep in deps do
 			table.insert(vals,dep.Value)
 		end
 		val_cont.Value = fn(table.unpack(vals))
 	end
-	for _, dep in ipairs(deps) do
+	for _, dep in deps do
 		dep.Changed:Connect(rerun)
 	end
 	rerun()
