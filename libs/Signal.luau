@@ -14,7 +14,6 @@ export type Signal<T...> = {
 	Filter:(self:Signal<T...>,fn:(T...) -> boolean) -> Signal<T...>,
 	MultiMap:(self:Signal<T...>,mods:{(T...) -> T...}) -> Signal<T...>,
 	MultiFilter:(self:Signal<T...>,fns:{(T...) -> boolean}) -> Signal<T...>,
-	Promisify:(self:Signal<T...>) -> any,
 	Destroy:(self:Signal<T...>) -> ()
 }
 
