@@ -28,7 +28,10 @@ local ValueType = {
 	Array = 22,
 	Dictionary = 23,
 	Buffer = 24,
-	Player = 25
+	Player = 25,
+	inf = 26,
+	nan = 27,
+	pi = 28
 }
 
 local Bufferizer = {
@@ -83,7 +86,10 @@ local BufferSize:{[number]:(val:any?) -> number|number} = {
 	[ValueType.Buffer] = function(buf:buffer)
 		return buffer.len(buf) + 2
 	end,
-	[ValueType.Player] = 8
+	[ValueType.Player] = 8,
+	[ValueType.inf] = 0,
+	[ValueType.nan] = 0,
+	[ValueType.pi] = 0
 }
 
 Bufferizer.BufferSize = BufferSize
@@ -128,7 +134,16 @@ function Bufferizer.get_value_type(val:any):(number,number)
 			val_type = ValueType["false"]
 		end
 	elseif typ == "number" then
-		if math.floor(val) == val then
+		if val == math.huge then
+			val_type = ValueType.inf
+			buf_size = BufferSize[val_type]
+		elseif tostring(val) == "nan" then
+			val_type = ValueType.nan
+			buf_size = BufferSize[val_type]
+		elseif val == math.pi then
+			val_type = ValueType.pi
+			buf_size = BufferSize[val_type]
+		elseif math.floor(val) == val then
 			if val < 0 then
 				if val > -(2^7) then
 					val_type = ValueType.i8
@@ -316,6 +331,9 @@ function Bufferizer.bufferize(val):buffer?
 		buffer.copy(buf,3,val,0,encoded_buf_len)
 	elseif val_type == ValueType.Player then
 		buffer.writef64(buf,1,val.UserId)
+	elseif val_type == ValueType.inf then
+	elseif val_type == ValueType.nan then
+	elseif val_type == ValueType.pi then
 	end
 	return buf
 end
@@ -430,6 +448,12 @@ function Bufferizer.extract(buf:buffer):any?
 		return new_buf
 	elseif val_type == ValueType.Player then
 		return game.Players:GetPlayerByUserId(buffer.readf64(buf,1))
+	elseif val_type == ValueType.inf then
+		return math.huge
+	elseif val_type == ValueType.nan then
+		return tonumber("nan")
+	elseif val_type == ValueType.pi then
+		return math.pi
 	end
 	return nil
 end
