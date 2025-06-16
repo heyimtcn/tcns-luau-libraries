@@ -137,7 +137,7 @@ function Table.filter<T,U>(tbl:{[T]:U},fn:(key:T,val:U) -> boolean,same_tbl:bool
 	return new_tbl
 end
 
-function Table.arrfilter<T>(arr:{T},fn:(val:T) -> boolean,same_arr:boolean?):{T}
+function Table.filterarr<T>(arr:{T},fn:(val:T) -> boolean,same_arr:boolean?):{T}
 	local new_arr = if same_arr then arr else {}
 	local current_values = Table.clone(arr)
 	Table.clear(new_arr)
@@ -190,7 +190,7 @@ function Table.map<A,B,C,D>(tbl:{[A]:B},fn:(key:A,val:B) -> (C,D),same_tbl:boole
 	return new_tbl
 end
 
-function Table.arrmap<A,B>(arr:{A},fn:(val:A) -> B,same_arr:boolean?):{B}
+function Table.maparr<A,B>(arr:{A},fn:(val:A) -> B,same_arr:boolean?):{B}
 	local new_arr = if same_arr then arr else {}
 	local current_values = Table.clone(arr)
 	Table.clear(new_arr)
