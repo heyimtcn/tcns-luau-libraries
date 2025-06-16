@@ -137,7 +137,7 @@ function Bufferizer.get_value_type(val:any):(number,number)
 		if val == math.huge then
 			val_type = ValueType.inf
 			buf_size = BufferSize[val_type]
-		elseif tostring(val) == "nan" then
+		elseif val ~= val then
 			val_type = ValueType.nan
 			buf_size = BufferSize[val_type]
 		elseif val == math.pi then
