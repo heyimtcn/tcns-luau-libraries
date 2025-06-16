@@ -137,13 +137,13 @@ function Table.filter<T,U>(tbl:{[T]:U},fn:(key:T,val:U) -> boolean,same_tbl:bool
 	return new_tbl
 end
 
-function Table.filterarr<T>(arr:{T},fn:(index:number,val:T) -> boolean,same_arr:boolean?):{T}
+function Table.arrfilter<T>(arr:{T},fn:(val:T) -> boolean,same_arr:boolean?):{T}
 	local new_arr = if same_arr then arr else {}
 	local current_values = Table.clone(arr)
 	Table.clear(new_arr)
-	for key, value in current_values do
-		if fn(key,value) then
-			Table.insert(new_arr,current_values[key])
+	for _, value in current_values do
+		if fn(value) then
+			Table.insert(new_arr,value)
 		end
 	end
 	return new_arr
