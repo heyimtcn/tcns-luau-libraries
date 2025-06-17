@@ -1,7 +1,5 @@
 # TCN Libraries
-Libraries written by me for Roblox.\
-Rojo bindings are automatically generated with scripts\
-The `model.rbxm` file contains every library (including `Communicator` which is multi-modular and experimental) with their dependencies already resolved.
+Libraries written by me for Roblox.
 
 # Descriptions
 | Name                                                                                                 | Description                                                                                                                                                                                                                                                                                        | Stable?           | Dependencies                            | All Dependencies                             |
