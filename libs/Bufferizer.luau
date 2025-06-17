@@ -66,7 +66,7 @@ local BufferSize:{[number]:(val:any?) -> number|number} = {
 	[ValueType.UDim] = 6,
 	[ValueType.UDim2] = 12,
 	[ValueType.CFrame] = 48,
-	[ValueType.Color3] = 6,
+	[ValueType.Color3] = 3,
 	[ValueType.BrickColor] = 2,
 	[ValueType.Ray] = 36,
 	[ValueType.EnumItem] = 4,
@@ -295,7 +295,9 @@ function Bufferizer.bufferize(val):buffer?
 		buffer.writef32(buf,41,val.UpVector.Y)
 		buffer.writef32(buf,45,val.UpVector.Z)
 	elseif val_type == ValueType.Color3 then
-		buffer.writestring(buf,1,val:ToHex())
+		buffer.writeu8(buf,1,math.round(val.R * 255))
+		buffer.writeu8(buf,2,math.round(val.G * 255))
+		buffer.writeu8(buf,3,math.round(val.B * 255))
 	elseif val_type == ValueType.BrickColor then
 		buffer.writeu16(buf,1,val.Number)
 	elseif val_type == ValueType.Ray then
@@ -403,7 +405,7 @@ function Bufferizer.extract(buf:buffer):any?
 		local up_vec = Vector3.new(buffer.readf32(buf,37),buffer.readf32(buf,41),buffer.readf32(buf,45))
 		return CFrame.lookAt(pos,pos + look_at,up_vec)
 	elseif val_type == ValueType.Color3 then
-		return Color3.fromHex(buffer.readstring(buf,1,6))
+		return Color3.fromRGB(buffer.readu8(buf,1),buffer.readu8(buf,2),buffer.readu8(buf,3))
 	elseif val_type == ValueType.BrickColor then
 		return BrickColor.new(buffer.readu16(buf,1))
 	elseif val_type == ValueType.Ray then
