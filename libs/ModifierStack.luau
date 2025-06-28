@@ -19,7 +19,8 @@ export type ModifierStack<T> = {
 	GetModifiers:(self:ModifierStack<T>) -> {Modifier<T>},
 	GetOperators:(self:ModifierStack<T>) -> {[Operator|string]:(acc:T,val:T) -> T},
 	GetOrder:(self:ModifierStack<T>) -> {Operator|string},
-	BindTo:(self:ModifierStack<T>,obj:Instance|{[string]:any},prop:string,def:T) -> (() -> ())
+	BindTo:(self:ModifierStack<T>,obj:Instance|{[string]:any},prop:string,def:T) -> (() -> ()),
+	BindToAttribute:(self:ModifierStack<T>,inst:Instance,attr:string,def:T) -> (() -> ())
 }
 
 local ModifierStack = {}
@@ -123,6 +124,19 @@ function prototype:BindTo(obj:Instance|{[string]:any},prop,def)
 			conn:Disconnect()
 		end)
 	end
+	return function()
+		conn:Disconnect()
+	end
+end
+
+function prototype:BindToAttribute(inst:Instance,attr,def)
+	inst:SetAttribute(attr,self:Calculate(def))
+	local conn = self.Changed:Connect(function()
+		inst:SetAttribute(attr,self:Calculate(def))
+	end)
+	inst.Destroying:Connect(function()
+		conn:Disconnect()
+	end)
 	return function()
 		conn:Disconnect()
 	end
