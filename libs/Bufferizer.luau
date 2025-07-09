@@ -1,6 +1,7 @@
 --!nocheck
 
 local table = require(script.Parent.Table)
+local string = require(script.Parent.String)
 
 local ValueType = {
 	["nil"] = 0,
@@ -38,6 +39,35 @@ local Bufferizer = {
 	ValueType = ValueType
 }
 
+local all_enum_names = table.maparr(Enum:GetEnums(),function(enum)
+	return tostring(enum)
+end)
+
+local function find_enum_short_name(name:string)
+	local all_enum_names_without_target = table.filter(all_enum_names,function(_,iter_name)
+		return iter_name ~= name
+	end)
+	local short_name = name:sub(1,1)
+	local iter = 1
+	local cond = true
+	while cond do
+		cond = table.any(all_enum_names_without_target,function(_,iter_name)
+			return string.startswith(iter_name,short_name)
+		end)
+		if not cond then
+			return short_name
+		end
+		iter += 1
+		short_name = name:sub(1,iter)
+	end
+end
+
+local function get_enum_from_short_name(short_name:string)
+	return Enum[select(2,table.findfirstfn(all_enum_names,function(name)
+		return string.startswith(name,short_name)
+	end))]
+end
+
 local function array_size(arr:{any}):number
 	local size = 4 --2 + 2 (lenght + size)
 	for _, val in arr do
@@ -69,7 +99,9 @@ local BufferSize:{[number]:(val:any?) -> number|number} = {
 	[ValueType.Color3] = 3,
 	[ValueType.BrickColor] = 2,
 	[ValueType.Ray] = 36,
-	[ValueType.EnumItem] = 4,
+	[ValueType.EnumItem] = function(item:EnumItem)
+		return buffer.len(buffer.fromstring(find_enum_short_name(tostring(item.EnumType)))) + 2 + 2
+	end,
 	[ValueType.Instance] = function(inst:Instance)
 		return buffer.len(buffer.fromstring(inst:GetFullName())) + 2
 	end,
@@ -121,8 +153,14 @@ function Bufferizer.to_bytes(buf:buffer):{number}
 	return arr
 end
 
+function Bufferizer.hex_str(buf:buffer):string
+	local bytes = Bufferizer.to_bytes(buf)
+	return table.concat(table.maparr(bytes,function(b)
+		return string.format("%X",b)
+	end)," ")
+end
+
 function Bufferizer.get_value_type(val:any):(number,number)
-	local buf_size = 0
 	local val_type = -1
 	local typ = typeof(val)
 	if typ == "nil" then
@@ -136,94 +174,74 @@ function Bufferizer.get_value_type(val:any):(number,number)
 	elseif typ == "number" then
 		if val == math.huge then
 			val_type = ValueType.inf
-			buf_size = BufferSize[val_type]
 		elseif val ~= val then
 			val_type = ValueType.nan
-			buf_size = BufferSize[val_type]
 		elseif val == math.pi then
 			val_type = ValueType.pi
-			buf_size = BufferSize[val_type]
 		elseif math.floor(val) == val then
 			if val < 0 then
 				if val > -(2^7) then
 					val_type = ValueType.i8
-					buf_size = BufferSize[val_type]
 				elseif val > -(2^15) then
 					val_type = ValueType.i16
-					buf_size = BufferSize[val_type]
 				else
 					val_type = ValueType.i32
-					buf_size = BufferSize[val_type]
 				end
 			else
 				if val < 2^8 then
 					val_type = ValueType.u8
-					buf_size = BufferSize[val_type]
 				elseif val < 2^16 then
 					val_type = ValueType.u16
-					buf_size = BufferSize[val_type]
 				else
 					val_type = ValueType.u32
-					buf_size = BufferSize[val_type]
 				end
 			end
 		else
 			val_type = ValueType.f64
-			buf_size = BufferSize[val_type]
 		end
 	elseif typ == "string" then
 		val_type = ValueType.string
-		buf_size = BufferSize[val_type](val)
 	elseif typ == "Vector2" then
 		val_type = ValueType.Vector2
-		buf_size = BufferSize[val_type]
 	elseif typ == "Vector3" then
 		val_type = ValueType.Vector3
-		buf_size = BufferSize[val_type]
 	elseif typ == "UDim" then
 		val_type = ValueType.UDim
-		buf_size = BufferSize[val_type]
 	elseif typ == "UDim2" then
 		val_type = ValueType.UDim2
-		buf_size = BufferSize[val_type]
 	elseif typ == "CFrame" then
 		val_type = ValueType.CFrame
-		buf_size = BufferSize[val_type]
 	elseif typ == "Color3" then
 		val_type = ValueType.Color3
-		buf_size = BufferSize[val_type]
 	elseif typ == "BrickColor" then
 		val_type = ValueType.BrickColor
-		buf_size = BufferSize[val_type]
 	elseif typ == "Ray" then
 		val_type = ValueType.Ray
-		buf_size = BufferSize[val_type]
 	elseif typ == "EnumItem" then
 		val_type = ValueType.EnumItem
-		buf_size = BufferSize[val_type]
 	elseif typ == "Instance" then
 		if val:IsA("Player") then
 			val_type = ValueType.Player
-			buf_size = BufferSize[val_type]
 		else
 			val_type = ValueType.Instance
-			buf_size = BufferSize[val_type](val)
 		end
 	elseif typ == "table" then
 		local tbl_type:"array"|"dict"|"empty"|"mixed" = table.gettype(val)
 		if tbl_type == "empty" then
 			val_type = ValueType.EmptyTable
-			buf_size = BufferSize[val_type]
 		elseif tbl_type == "array" then
 			val_type = ValueType.Array
-			buf_size = BufferSize[val_type](val)
 		elseif tbl_type == "dict" or tbl_type == "mixed" then
 			val_type = ValueType.Dictionary
-			buf_size = BufferSize[val_type](val)
 		end
 	elseif typ == "buffer" then
 		val_type = ValueType.Buffer
+	end
+	local buf_size = 0
+	if type(BufferSize[val_type]) == "function" then
 		buf_size = BufferSize[val_type](val)
+	else
+		buf_size = BufferSize[val_type]
 	end
 	return val_type, buf_size
 end
@@ -267,7 +285,7 @@ function Bufferizer.bufferize(val):buffer?
 	elseif val_type == ValueType.string then
 		local str_buf = buffer.fromstring(val)
 		local str_len = buffer.len(str_buf)
-		buffer.writeu16(buf,1,str_len) --string lenght
+		buffer.writeu16(buf,1,str_len) --string length
 		buffer.copy(buf,3,str_buf,0,str_len)
 	elseif val_type == ValueType.Vector2 then
 		buffer.writef64(buf,1,val.X)
@@ -308,16 +326,15 @@ function Bufferizer.bufferize(val):buffer?
 		buffer.writef32(buf,29,val.Direction.Y)
 		buffer.writef32(buf,33,val.Direction.Z)
 	elseif val_type == ValueType.EnumItem then
-		local enum_name = tostring(val.EnumType)
-		local enum_index = table.findfirstfn(Enum:GetEnums(),function(el)
-			return tostring(el) == enum_name
-		end)
-		buffer.writeu16(buf,1,enum_index)
-		buffer.writeu16(buf,3,val.Value)
+		local str_buf = buffer.fromstring(find_enum_short_name(tostring(val.EnumType)))
+		local str_len = buffer.len(str_buf)
+		buffer.writeu16(buf,1,str_len + 2)
+		buffer.writeu16(buf,3,val.Value) 
+		buffer.copy(buf,5,str_buf,0,str_len)
 	elseif val_type == ValueType.Instance then
 		local str_buf = buffer.fromstring(val:GetFullName())
 		local str_len = buffer.len(str_buf)
-		buffer.writeu16(buf,1,str_len) --full name lenght
+		buffer.writeu16(buf,1,str_len) --full name length
 		buffer.copy(buf,3,str_buf,0,str_len)
 	elseif val_type == ValueType.EmptyTable then
 	elseif val_type == ValueType.Array then
@@ -351,18 +368,14 @@ function Bufferizer.extract(buf:buffer):any?
 		while elems_done < elem_amount do
 			local val_type = buffer.readu8(buf,offset)
 			local buf_size
-			--print("val_type",val_type)
 			if type(BufferSize[val_type]) == "function" then
 				buf_size = buffer.readu16(buf,offset + 1) + 3 --1 + 2 (type + size)
 			else
 				buf_size = BufferSize[val_type] + 1
 			end
-			--print("buf_size",buf_size)
 			local val_buff = buffer.create(buf_size)
 			buffer.copy(val_buff,0,buf,offset,buf_size)
-			--print(elems_done,Bufferizer.to_bytes(val_buff),arr)
 			local iter_val = Bufferizer.extract(val_buff)
-			--print("iter_val",iter_val)
 			table.insert(arr,iter_val)
 			elems_done += 1
 			offset += buf_size
@@ -413,10 +426,11 @@ function Bufferizer.extract(buf:buffer):any?
 		local direction = Vector3.new(buffer.readf32(buf,25),buffer.readf32(buf,29),buffer.readf32(buf,33))
 		return Ray.new(origin,direction)
 	elseif val_type == ValueType.EnumItem then
-		local enum_index = buffer.readu16(buf,1)
-		local val = buffer.readu16(buf,3)
-		return select(2,table.findfirstfn(Enum:GetEnums()[enum_index]:GetEnumItems(),function(enum_item)
-			return enum_item.Value == val
+		local number_val = buffer.readu16(buf,3)
+		local short_name = buffer.readstring(buf,5,buffer.readu16(buf,1) - 2)
+		local enum = get_enum_from_short_name(short_name)
+		return select(2,table.findfirstfn(enum:GetEnumItems(),function(enum_item)
+			return enum_item.Value == number_val
 		end))
 	elseif val_type == ValueType.Instance then
 		local path = buffer.readstring(buf,3,buffer.readu16(buf,1))
