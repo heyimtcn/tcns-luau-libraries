@@ -1,6 +1,8 @@
 --!nocheck
 
---REQUIRE ON THE CLIENT
+---REQUIRE ON THE CLIENT
+
+---WARNING: Since ragdolling disables Humanoid.RequireNeck, falling to the void or having every part of the character get delted will not kill the character, it will also make manual resetting impossible, i advice you make a fix like when the humanoidrootpart is deleted respawn the player
 
 local COMM_CHANNEL_ID = 27 --EDIT
 
