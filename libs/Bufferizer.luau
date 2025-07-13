@@ -178,7 +178,7 @@ function Bufferizer.get_value_type(val:any):(number,number)
 			val_type = ValueType.nan
 		elseif val == math.pi then
 			val_type = ValueType.pi
-		elseif math.floor(val) == val then
+		elseif math.floor(val) == val and val < 2^31 then
 			if val < 0 then
 				if val > -(2^7) then
 					val_type = ValueType.i8
