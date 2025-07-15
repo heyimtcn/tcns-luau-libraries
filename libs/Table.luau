@@ -538,6 +538,13 @@ function Table.reconcile(src:{[any]:any},tmpl:{[any]:any},same_tbl:boolean?):{[a
 	return new_tbl
 end
 
+function Table.removefirst<T>(arr:{T},val:T)
+	local idx = Table.find(arr,val)
+	if idx then
+		Table.remove(arr,idx)
+	end
+end
+
 function Table.swapremove(arr:{any},idx:number)
 	local len = #arr
 	arr[idx] = arr[len]
