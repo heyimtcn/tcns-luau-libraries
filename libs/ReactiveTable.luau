@@ -5,7 +5,7 @@ local Signal = require(script.Parent.Signal)
 export type ReactiveTable<T> = {
 	Changed:Signal.Signal<any>,
 	GetChangedSignal:(self:ReactiveTable,key:any) -> Signal.Signal<>,
-	Values:T
+	InnerValues:T
 }
 
 local ReactiveTable = {}
@@ -24,7 +24,7 @@ function ReactiveTable.new<T>(defs:T,locked:boolean?,parent:ReactiveTable?,self_
 	end
 	local handler = {
 		ClassName = "ReactiveTable",
-		Values = defs,
+		InnerValues = defs,
 		_changed_signals = changed_signals,
 		_parent = parent,
 		Changed = Signal.new() :: Signal.Signal<any>,
@@ -41,18 +41,18 @@ function ReactiveTable.new<T>(defs:T,locked:boolean?,parent:ReactiveTable?,self_
 	}
 	return setmetatable(handler,{
 		__index = function(tbl,key)
-			if tbl.Values[key] == nil and locked then
+			if tbl.InnerValues[key] == nil and locked then
 				error(`Attempted to get "{key}" (not a key)`,2)
 			end
-			return tbl.Values[key]
+			return tbl.InnerValues[key]
 		end,
 		__newindex = function(tbl,key,value)
-			if tbl.Values[key] == nil and locked then
+			if tbl.InnerValues[key] == nil and locked then
 				error(`Attempted to set "{key}" (not a key)`,2)
 			end
-			local old_val = tbl.Values[key]
+			local old_val = tbl.InnerValues[key]
 			if value ~= old_val then
-				tbl.Values[key] = value
+				tbl.InnerValues[key] = value
 				handler.Changed:Fire(key)
 				if changed_signals[key] ~= nil then
 					handler:GetChangedSignal(key):Fire()
@@ -66,7 +66,7 @@ function ReactiveTable.new<T>(defs:T,locked:boolean?,parent:ReactiveTable?,self_
 			end
 		end,
 		__iter = function(tbl)
-			return pairs(tbl.Values)
+			return pairs(tbl.InnerValues)
 		end,
 	})
 end
