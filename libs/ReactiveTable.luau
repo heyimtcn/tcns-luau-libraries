@@ -11,7 +11,7 @@ export type ReactiveTable<T> = {
 local ReactiveTable = {}
 ReactiveTable.ClassName = "ReactiveTable"
 
-function ReactiveTable.new<T>(defs:T,locked:boolean?,parent:ReactiveTable?,self_name:string?):ReactiveTable<T>
+function ReactiveTable.new<T>(defs:T,locked:boolean?,parent:ReactiveTable?,self_name:string?):ReactiveTable<T> & T
 	locked = if locked == nil then false else locked
 	if parent ~= nil then
 		if self_name == nil then
