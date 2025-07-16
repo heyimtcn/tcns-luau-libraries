@@ -10,8 +10,13 @@ export type ReactiveTable = {
 local ReactiveTable = {}
 ReactiveTable.ClassName = "ReactiveTable"
 
-function ReactiveTable.new<T>(defs:T,locked:boolean?):ReactiveTable & T
+function ReactiveTable.new<T>(defs:T,locked:boolean?,parent:ReactiveTable?,self_name:string?):ReactiveTable & T
 	locked = if locked == nil then false else locked
+	if parent ~= nil then
+		if self_name == nil then
+			error("self_name is required for ReactiveTables with a parent",2)
+		end
+	end
 	local changed_signals = {}
 	for name, _ in defs do
 		changed_signals[name] = Signal.new()
@@ -20,6 +25,7 @@ function ReactiveTable.new<T>(defs:T,locked:boolean?):ReactiveTable & T
 		ClassName = "ReactiveTable",
 		_props = defs,
 		_changed_signals = changed_signals,
+		_parent = parent,
 		Changed = Signal.new() :: Signal.Signal<any>,
 		GetChangedSignal = function(self,key)
 			if changed_signals[key] == nil then
@@ -35,22 +41,27 @@ function ReactiveTable.new<T>(defs:T,locked:boolean?):ReactiveTable & T
 	return setmetatable(handler,{
 		__index = function(tbl,key)
 			if tbl._props[key] == nil and locked then
-				error(`Attempted to get "{key}" (not a key)`)
+				error(`Attempted to get "{key}" (not a key)`,2)
 			end
 			return tbl._props[key]
 		end,
 		__newindex = function(tbl,key,value)
 			if tbl._props[key] == nil and locked then
-				error(`Attempted to set "{key}" (not a key)`)
+				error(`Attempted to set "{key}" (not a key)`,2)
 			end
 			local old_val = tbl._props[key]
 			if value ~= old_val then
 				tbl._props[key] = value
 				handler.Changed:Fire(key)
-				if old_val == nil then
-					changed_signals[key] = Signal.new()
+				if changed_signals[key] ~= nil then
+					handler:GetChangedSignal(key):Fire()
 				end
-				handler:GetChangedSignal(key):Fire()
+				if parent ~= nil then
+					parent.Changed:Fire(self_name)
+					if parent._changed_signals[self_name] ~= nil then
+						parent:GetChangedSignal(self_name):Fire()
+					end
+				end
 			end
 		end,
 		__iter = function(tbl)
